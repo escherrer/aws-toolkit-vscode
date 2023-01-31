@@ -151,7 +151,7 @@ export class RecommendationHandler {
             req = EditorContext.buildListRecommendationRequest(
                 editor as vscode.TextEditor,
                 this.nextToken,
-                accessToken ? undefined : config.isIncludeSuggestionsWithCodeReferencesEnabled
+                accessToken ? undefined : config.isSuggestionsWithCodeReferencesEnabled
             )
         } else {
             req = EditorContext.buildGenerateRecommendationRequest(editor as vscode.TextEditor)
@@ -179,6 +179,7 @@ export class RecommendationHandler {
                     page === 0,
                     codewhispererPromise
                 )
+                TelemetryHelper.instance.setSdkApiCallEndTime()
                 latency = startTime !== 0 ? performance.now() - startTime : 0
                 if ('recommendations' in resp) {
                     recommendation = (resp && resp.recommendations) || []
@@ -199,6 +200,11 @@ export class RecommendationHandler {
                 requestId = resp?.$response && resp?.$response?.requestId
                 nextToken = resp?.nextToken ? resp?.nextToken : ''
                 sessionId = resp?.$response?.httpResponse?.headers['x-amzn-sessionid']
+                TelemetryHelper.instance.setFirstResponseRequestId(requestId)
+                TelemetryHelper.instance.setSessionId(sessionId)
+                if (nextToken === '') {
+                    TelemetryHelper.instance.setAllPaginationEndTime()
+                }
             } else {
                 getLogger().info('Invalid Request : ', JSON.stringify(req, undefined, EditorContext.getTabSize()))
                 getLogger().verbose(`Invalid Request : ${JSON.stringify(req, undefined, EditorContext.getTabSize())}`)
@@ -335,7 +341,11 @@ export class RecommendationHandler {
         this.nextToken = ''
         this.errorMessagePrompt = ''
     }
-    reportUserDecisionOfCurrentRecommendation(editor: vscode.TextEditor | undefined, acceptIndex: number) {
+
+    /**
+     * Emits telemetry reflecting user decision for current recommendation.
+     */
+    reportUserDecisionOfRecommendation(editor: vscode.TextEditor | undefined, acceptIndex: number) {
         TelemetryHelper.instance.recordUserDecisionTelemetry(
             this.requestId,
             this.sessionId,
@@ -353,7 +363,7 @@ export class RecommendationHandler {
 
     canShowRecommendationInIntelliSense(editor: vscode.TextEditor, showPrompt: boolean = false): boolean {
         const reject = () => {
-            this.reportUserDecisionOfCurrentRecommendation(editor, -1)
+            this.reportUserDecisionOfRecommendation(editor, -1)
             this.clearRecommendations()
         }
         if (!this.isValidResponse()) {

@@ -35,6 +35,7 @@ export const ssoCredentialsHelpUrl: string =
 
 export const supportedLambdaRuntimesUrl: string =
     'https://docs.aws.amazon.com/lambda/latest/dg/runtime-support-policy.html'
+export const createUrlForLambdaFunctionUrl = 'https://docs.aws.amazon.com/lambda/latest/dg/urls-configuration.html'
 // URLs for samInitWizard
 export const samInitDocUrl: string = isCloud9()
     ? 'https://docs.aws.amazon.com/cloud9/latest/user-guide/serverless-apps-toolkit.html#sam-create'
@@ -46,6 +47,7 @@ export const launchConfigDocUrl: string = isCloud9()
 export const samDeployDocUrl: string = isCloud9()
     ? 'https://docs.aws.amazon.com/cloud9/latest/user-guide/serverless-apps-toolkit.html#deploy-serverless-app'
     : 'https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/serverless-apps.html#serverless-apps-deploy'
+export const lambdaFunctionUrlConfigUrl: string = 'https://docs.aws.amazon.com/lambda/latest/dg/urls-configuration.html'
 
 // URLs for CDK
 export const cdkProvideFeedbackUrl: string = `${githubUrl}/issues/new/choose`
@@ -96,19 +98,19 @@ export const ecsRequiredIamPermissionsUrl: string =
  * US: Jan 5, 2020 5:30:20 PM GMT-0700
  * GB: 5 Jan 2020 17:30:20 GMT+0100
  */
-export const LOCALIZED_DATE_FORMAT = 'll LTS [GMT]ZZ'
+export const LOCALIZED_DATE_FORMAT = 'll LTS [GMT]ZZ' // eslint-disable-line @typescript-eslint/naming-convention
 
 // moment().format() matches Insights console timestamp, e.g.: 2019-03-04T11:40:08.781-08:00
 // TODO: Do we want this this verbose? Log stream just shows HH:mm:ss
-export const INSIGHTS_TIMESTAMP_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ'
+export const INSIGHTS_TIMESTAMP_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ' // eslint-disable-line @typescript-eslint/naming-convention
 
 /**
  * URI scheme for CloudWatch Logs Virtual Documents
  */
-export const CLOUDWATCH_LOGS_SCHEME = 'awsCloudWatchLogs'
-export const AWS_SCHEME = 'aws'
+export const CLOUDWATCH_LOGS_SCHEME = 'awsCloudWatchLogs' // eslint-disable-line @typescript-eslint/naming-convention
+export const AWS_SCHEME = 'aws' // eslint-disable-line @typescript-eslint/naming-convention
 
-export const LAMBDA_PACKAGE_TYPE_IMAGE = 'Image'
+export const lambdaPackageTypeImage = 'Image'
 
 // URLs for App Runner
 export const apprunnerConnectionHelpUrl =

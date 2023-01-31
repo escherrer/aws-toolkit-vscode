@@ -20,6 +20,8 @@ export const promiseTimeoutLimit = 15 // seconds
 
 export const invocationKeyThreshold = 15
 
+export const idleTimerPollPeriod = 25 // milliseconds
+
 export const specialCharactersList = ['{', '[', '(', ':', '\t', '\n']
 
 export const normalTextChangeRegex = /[A-Za-z0-9]/g
@@ -101,7 +103,7 @@ export const licenseFilter = 'CodeWhisperer suggestions were filtered due to ref
  */
 export const welcomeCodeWhispererReadmeFileSource = 'resources/markdown/WelcomeToCodeWhisperer.md'
 
-export const welcomeCodeWhispererCloud9ReadmeFileSource = 'resources/markdown/WelcomeToCodeWhispererCloud9.md'
+export const welcomeCodeWhispererCloud9Readme = 'resources/markdown/WelcomeToCodeWhispererCloud9.md'
 
 export const welcomeMessageKey = 'CODEWHISPERER_WELCOME_MESSAGE'
 
@@ -137,6 +139,9 @@ export const accessToken = 'CODEWHISPERER_ACCESS_TOKEN'
 export const learnMoreUriGeneral = 'https://aws.amazon.com/codewhisperer/'
 
 export const learnMoreUri = 'https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/codewhisperer.html'
+
+export const accessTokenMigrationLearnMoreUri =
+    'https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/codewhisperer-auth.html'
 
 export const identityPoolID = 'us-east-1:70717e99-906f-4add-908c-bd9074a2f5b9'
 
@@ -213,7 +218,7 @@ export const accessTokenCutOffDate = new Date(2023, 0, 31)
 
 export const accessTokenMigrationWarningMessage = `To continue using CodeWhisperer, you must add an AWS Builder ID or AWS IAM Identity Center connection by January 31, 2023.`
 
-export const accessTokenMigrationErrorMessage = `To continue using CodeWhisperer, you must add an AWS Builder ID or AWS IAM Identity Center connection.`
+export const accessTokenMigrationErrorMessage = `Your Preview Access Code has expired. To continue using CodeWhisperer, connect with AWS Builder ID or AWS IAM Identity center.`
 
 export const accessTokenMigrationWarningButtonMessage = `Connect with AWS to Continue`
 
@@ -236,11 +241,20 @@ export const failedToConnectIamIdentityCenter = `Failed to connect to IAM Identi
 
 export const connectionExpired = `AWS Toolkit: Connection expired. Reauthenticate to continue.`
 
+export const accessTokenMigrationLearnMore = `Learn More`
+
 export const accessTokenMigrationDoNotShowAgain = `Don\'t Show Again`
 
 export const accessTokenMigrationDoNotShowAgainKey = 'CODEWHISPERER_ACCESS_TOKEN_MIGRATION_DO_NOT_SHOW_AGAIN'
 
-export const accessTokenMigrationDoNotShowAgainLastShown =
+export const accessTokenExpiredDoNotShowAgainKey = 'CODEWHISPERER_ACCESS_TOKEN_EXPIRED_DO_NOT_SHOW_AGAIN'
+
+export const accessTokenExpriedKey = 'CODEWHISPERER_ACCESS_TOKEN_EXPIRED'
+
+export const accessTokenMigrationDoNotShowLastShown =
     'CODEWHISPERER_ACCESS_TOKEN_MIGRATION_DO_NOT_SHOW_AGAIN_LAST_SHOWN_TIME'
+
+export const accessTokenExpiredDoNotShowLastShown =
+    'CODEWHISPERER_ACCESS_TOKEN_EXPIRED_DO_NOT_SHOW_AGAIN_LAST_SHOWN_TIME'
 
 export const accessTokenMigrationDoNotShowAgainInfo = `You will not receive this notification again. If you would like to continue using CodeWhisperer after January 31, 2023, you can still connect with AWS. [Learn More](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/codewhisper-setup-general.html).`

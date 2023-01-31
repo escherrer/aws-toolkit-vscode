@@ -22,7 +22,7 @@ import { getPrefixSuffixOverlap } from '../util/commonUtil'
 import globals from '../../shared/extensionGlobals'
 import { AuthUtil } from '../util/authUtil'
 
-class CodeWhispererInlineCompletionItemProvider implements vscode.InlineCompletionItemProvider {
+class CWInlineCompletionItemProvider implements vscode.InlineCompletionItemProvider {
     private activeItemIndex: number | undefined
     public nextMove: number
 
@@ -86,7 +86,7 @@ class CodeWhispererInlineCompletionItemProvider implements vscode.InlineCompleti
         return index
     }
 
-    truncateSuggestionOverlapWithRightContext(document: vscode.TextDocument, suggestion: string): string {
+    truncateOverlapWithRightContext(document: vscode.TextDocument, suggestion: string): string {
         let rightContextRange: vscode.Range | undefined = undefined
         const pos = RecommendationHandler.instance.startPos
         if (suggestion.split(/\r?\n/).length > 1) {
@@ -104,13 +104,17 @@ class CodeWhispererInlineCompletionItemProvider implements vscode.InlineCompleti
         r: Recommendation,
         start: vscode.Position,
         end: vscode.Position,
-        index: number
+        index: number,
+        prefix: string
     ): vscode.InlineCompletionItem | undefined {
-        const prefix = document.getText(new vscode.Range(start, end)).replace(/\r\n/g, '\n')
-        const truncatedSuggestion = this.truncateSuggestionOverlapWithRightContext(document, r.content)
-        if (!r.content.startsWith(prefix) || truncatedSuggestion.length === 0) {
-            //mark suggestion as Discard when it does not fit into the context
-            RecommendationHandler.instance.setSuggestionState(index, 'Discard')
+        if (!r.content.startsWith(prefix)) {
+            return undefined
+        }
+        const truncatedSuggestion = this.truncateOverlapWithRightContext(document, r.content)
+        if (truncatedSuggestion.length === 0) {
+            if (RecommendationHandler.instance.getSuggestionState(index) !== 'Showed') {
+                RecommendationHandler.instance.setSuggestionState(index, 'Discard')
+            }
             return undefined
         }
         return {
@@ -158,7 +162,7 @@ class CodeWhispererInlineCompletionItemProvider implements vscode.InlineCompleti
         ).length
         for (const i of iteratingIndexes) {
             const r = RecommendationHandler.instance.recommendations[i]
-            const item = this.getInlineCompletionItem(document, r, start, end, i)
+            const item = this.getInlineCompletionItem(document, r, start, end, i, prefix)
             if (item === undefined) {
                 continue
             }
@@ -170,6 +174,8 @@ class CodeWhispererInlineCompletionItemProvider implements vscode.InlineCompleti
                 r.references
             )
             this.nextMove = 0
+            TelemetryHelper.instance.setFirstSuggestionShowTime()
+            TelemetryHelper.instance.tryRecordClientComponentLatency(document.languageId)
             this._onDidShow.fire()
             if (matchedCount >= 2 || RecommendationHandler.instance.hasNextToken()) {
                 return [item, { insertText: 'x' }]
@@ -204,7 +210,7 @@ const hideCommand = Commands.declare(
 )
 
 export class InlineCompletionService {
-    private inlineCompletionProvider?: CodeWhispererInlineCompletionItemProvider
+    private inlineCompletionProvider?: CWInlineCompletionItemProvider
     private inlineCompletionProviderDisposable?: vscode.Disposable
     private maxPage = 100
     private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1)
@@ -283,7 +289,7 @@ export class InlineCompletionService {
             vsCodeState.isCodeWhispererEditing = false
             ReferenceInlineProvider.instance.removeInlineReference()
             RecommendationHandler.instance.cancelPaginatedRequest()
-            RecommendationHandler.instance.reportUserDecisionOfCurrentRecommendation(editor, -1)
+            RecommendationHandler.instance.reportUserDecisionOfRecommendation(editor, -1)
             RecommendationHandler.instance.clearRecommendations()
             this.disposeInlineCompletion()
             this.setCodeWhispererStatusBarOk()
@@ -306,7 +312,7 @@ export class InlineCompletionService {
             RecommendationHandler.instance.recommendations.forEach((r, i) => {
                 RecommendationHandler.instance.setSuggestionState(i, 'Discard')
             })
-            RecommendationHandler.instance.reportUserDecisionOfCurrentRecommendation(editor, -1)
+            RecommendationHandler.instance.reportUserDecisionOfRecommendation(editor, -1)
             RecommendationHandler.instance.clearRecommendations()
         } else if (RecommendationHandler.instance.recommendations.length > 0) {
             RecommendationHandler.instance.moveStartPositionToSkipSpaces(editor)
@@ -343,7 +349,7 @@ export class InlineCompletionService {
                     page
                 )
                 if (RecommendationHandler.instance.checkAndResetCancellationTokens()) {
-                    RecommendationHandler.instance.reportUserDecisionOfCurrentRecommendation(editor, -1)
+                    RecommendationHandler.instance.reportUserDecisionOfRecommendation(editor, -1)
                     RecommendationHandler.instance.clearRecommendations()
                     this.setCodeWhispererStatusBarOk()
                     return
@@ -364,13 +370,14 @@ export class InlineCompletionService {
                 showTimedMessage(CodeWhispererConstants.noSuggestions, 2000)
             }
         }
+        TelemetryHelper.instance.tryRecordClientComponentLatency(editor.document.languageId)
     }
 
     async showRecommendation(indexShift: number, isFirstRecommendation: boolean = false) {
         if (vscode.window.activeTextEditor) {
             vscode.window.showTextDocument(vscode.window.activeTextEditor.document)
         }
-        this.inlineCompletionProvider = new CodeWhispererInlineCompletionItemProvider(
+        this.inlineCompletionProvider = new CWInlineCompletionItemProvider(
             this.inlineCompletionProvider?.getActiveItemIndex,
             indexShift
         )
@@ -410,6 +417,10 @@ export class InlineCompletionService {
         this._isPaginationRunning = false
         this.statusBar.text = ` $(check)CodeWhisperer`
         this.statusBar.show()
+    }
+
+    isPaginationRunning(): boolean {
+        return this._isPaginationRunning
     }
 
     hideCodeWhispererStatusBar() {
